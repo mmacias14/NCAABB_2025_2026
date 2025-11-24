@@ -9,3 +9,4 @@ tensorflow
 nbconvert
 openpyxl
 matplotlib
+rsconnect-python
