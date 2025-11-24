@@ -1,4 +1,3 @@
-# web_scraping.py -- Script to scrape NCAA basketball statistics and scores
 import pandas as pd
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -6,75 +5,49 @@ import requests
 import pickle
 import os
 
-# Set date range
+# -------------------------------
+# Config
+# -------------------------------
 date_start = datetime.strptime("2025-11-09", "%Y-%m-%d")
 date_end = datetime.now().date().strftime("%Y-%m-%d")
 dates = pd.date_range(date_start, date_end).strftime("%Y-%m-%d").tolist()
 
-# Load existing stats data if available
+pages = [
+    # Offense
+    "offensive-efficiency", "three-point-pct", "two-point-pct", "free-throw-pct", "percent-of-points-from-3-pointers",
+    "points-per-game", "three-pointers-made-per-game", "free-throws-made-per-game", "floor-percentage",
+    "turnovers-per-possession", "turnovers-per-game", "assists-per-game", "possessions-per-game",
+    # Rebounding
+    "offensive-rebounding-pct", "defensive-rebounding-pct","total-rebounds-per-game", "total-rebounding-percentage",
+    "extra-chances-per-game",
+    # Defense
+    "defensive-efficiency", "blocks-per-game", "steals-per-game", "block-pct", "steals-perpossession",
+    "personal-fouls-per-possession",
+    # Other
+    "win-pct-all-games",
+    "effective-possession-ratio", "opponent-effective-possession-ratio",
+    # Ratings
+    "schedule-strength-by-other", "predictive-by-other", "consistency-by-other"
+]
+
+# -------------------------------
+# Helpers
+# -------------------------------
 def load_rds(filename):
+    if not os.path.exists(filename):
+        return {}
     with open(filename, 'rb') as f:
         return pickle.load(f)
 
-try:
-    df_stats_away = load_rds("Stats_Away.rds")
-    df_stats_home = load_rds("Stats_Home.rds")
-except:
-    df_stats_away, df_stats_home = {}, {}
-
-# After loading df_stats_home and df_stats_away
-try:
-    df_stats_away = load_rds("Stats_Away.rds")
-    df_stats_home = load_rds("Stats_Home.rds")
-except:
-    df_stats_away, df_stats_home = {}, {}
-
-# Identify keys with None values
-home_none_keys = [k for k, v in df_stats_home.items() if v is None]
-away_none_keys = [k for k, v in df_stats_away.items() if v is None]
-
-print("\n--- Diagnostics ---")
-print(f"Stats_Home.rds has {len(home_none_keys)} None entries")
-if home_none_keys:
-    print("Home None dates:", sorted(home_none_keys))
-
-print(f"Stats_Away.rds has {len(away_none_keys)} None entries")
-if away_none_keys:
-    print("Away None dates:", sorted(away_none_keys))
-print("-------------------\n")
-
-# Create list of all dates
-dates_stat = pd.date_range(date_start, date_end).strftime("%Y-%m-%d").tolist()
-
-# Identify missing dates in stats data
-missing_date = list(set([
-    d for d in dates_stat if d not in df_stats_away.keys()
-] + [
-    d for d in dates_stat if d not in df_stats_home.keys()
-]))
-
-missing_date = sorted(set(missing_date + home_none_keys + away_none_keys))
-print(f"Total missing dates to scrape: {len(missing_date)}")
-print("Missing dates:", missing_date)
-
-
-# Function to scrape table from teamrankings.com
 def scrape_table(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    # Detect the table by ID
-    table = soup.find('table', class_= 'tr-table datatable scrollable')
+    table = soup.find('table', class_='tr-table datatable scrollable')
+    if not table:
+        print(f"Table not found at {url}")
+        return pd.DataFrame()
 
-    # Confirm detection
-    if table:
-        print("Table found")
-    else:
-        print("Table not found")
-
-    # Extract headers
     headers = [th.get_text(strip=True) for th in table.find_all('th')]
-
-    # Extract rows
     rows = []
     for tr in table.find_all('tr'):
         cells = tr.find_all(['td', 'th'])
@@ -82,104 +55,120 @@ def scrape_table(url):
         if row:
             rows.append(row)
 
-    # Create DataFrame
-    df = pd.DataFrame(rows, columns=headers if headers else None)
-    return df
+    return pd.DataFrame(rows, columns=headers if headers else None)
 
-# Teamrankings Stats pages to scrape
-pages = [
-    #Offense
-    "offensive-efficiency", "three-point-pct", "two-point-pct", "free-throw-pct", "percent-of-points-from-3-pointers",
-    "points-per-game", "three-pointers-made-per-game", "free-throws-made-per-game", "floor-percentage", 
-    "turnovers-per-possession", "turnovers-per-game", "assists-per-game", "possessions-per-game",
-    #Rebounding
-    "offensive-rebounding-pct", "defensive-rebounding-pct","total-rebounds-per-game", "total-rebounding-percentage", 
-    "extra-chances-per-game",
-    #Defense
-    "defensive-efficiency", "blocks-per-game", "steals-per-game", "block-pct", "steals-perpossession", 
-    "personal-fouls-per-possession",
-    #Other
-    "win-pct-all-games",
-    "effective-possession-ratio", "opponent-effective-possession-ratio",
-    #Ratings
-    "schedule-strength-by-other", "predictive-by-other", "consistency-by-other"
-]
+# -------------------------------
+# Load existing stats
+# -------------------------------
+df_stats_home = load_rds("Stats_Home.rds")
+df_stats_away = load_rds("Stats_Away.rds")
 
-# Scrape data for missing dates
-for date in missing_date:
+# -------------------------------
+# Identify missing dates
+# -------------------------------
+dates_stat = pd.date_range(date_start, date_end).strftime("%Y-%m-%d").tolist()
+home_none_keys = [k for k, v in df_stats_home.items() if v is None]
+away_none_keys = [k for k, v in df_stats_away.items() if v is None]
+
+missing_date = sorted(set(
+    [d for d in dates_stat if d not in df_stats_home] +
+    [d for d in dates_stat if d not in df_stats_away] +
+    home_none_keys + away_none_keys
+))
+
+print(f"Total missing dates to scrape: {len(missing_date)}")
+
+# -------------------------------
+# Expected columns
+# -------------------------------
+expected_home_cols = set()
+expected_away_cols = set()
+for j, page in enumerate(pages):
+    if j >= len(pages) - 3:  # ratings
+        expected_home_cols.add(page)
+        expected_away_cols.add(page)
+    else:
+        expected_home_cols.update([page, f"{page}.Last3", f"{page}.Last1", f"{page}.Home"])
+        expected_away_cols.update([page, f"{page}.Last3", f"{page}.Last1", f"{page}.Away"])
+
+# -------------------------------
+# Check existing dates for missing columns
+# -------------------------------
+dates_to_rescrape = set(missing_date)
+for date, df in df_stats_home.items():
+    if df is not None:
+        missing_cols = expected_home_cols - set(df.columns)
+        if missing_cols:
+            print(f"Home stats for {date} missing columns: {missing_cols}")
+            dates_to_rescrape.add(date)
+
+for date, df in df_stats_away.items():
+    if df is not None:
+        missing_cols = expected_away_cols - set(df.columns)
+        if missing_cols:
+            print(f"Away stats for {date} missing columns: {missing_cols}")
+            dates_to_rescrape.add(date)
+
+dates_to_rescrape = sorted(dates_to_rescrape)
+print(f"Dates to scrape or rescrape: {dates_to_rescrape}")
+
+# -------------------------------
+# Scrape data
+# -------------------------------
+for date in dates_to_rescrape:
     print(f"Scraping date: {date}")
-    df_day_home = None
-    df_day_away = None
-    df_SOS = None
-    df_rating = None
+    df_day_home, df_day_away = None, None
 
     for j, page in enumerate(pages):
-        if j >= len(pages) - 3:  # Last 3 pages are ratings
-            base_url = "https://www.teamrankings.com/ncaa-basketball/ranking/"
-        else:
-            base_url = "https://www.teamrankings.com/ncaa-basketball/stat/"
-        
+        base_url = "https://www.teamrankings.com/ncaa-basketball/ranking/" if j >= len(pages) - 3 \
+                   else "https://www.teamrankings.com/ncaa-basketball/stat/"
         url = f"{base_url}{page}?date={date}"
 
         try:
             df_scrape = scrape_table(url)
+            if df_scrape.empty or "Team" not in df_scrape.columns:
+                continue
             df_scrape['Team'] = df_scrape['Team'].str.replace(r"\(.*\)", "", regex=True).str.strip()
 
-            if j >= len(pages) - 3:
+            if j >= len(pages) - 3:  # ratings
                 df_rating = pd.DataFrame({
                     "Date": date,
                     "Team": df_scrape["Team"],
                     page: df_scrape["Rating"]
                 })
-
-                if df_day_home is None:
-                    df_day_home = df_rating
-                    df_day_away = df_rating
-                else:
-                    df_day_home = pd.merge(df_day_home, df_rating, on=["Date", "Team"], how="left")
-                    df_day_away = pd.merge(df_day_away, df_rating, on=["Date", "Team"], how="left")
-
+                df_day_home = df_rating if df_day_home is None else pd.merge(df_day_home, df_rating, on=["Date", "Team"], how="left")
+                df_day_away = df_rating if df_day_away is None else pd.merge(df_day_away, df_rating, on=["Date", "Team"], how="left")
             else:
                 df_stat_home = pd.DataFrame({
                     "Date": date,
                     "Team": df_scrape["Team"],
-                    page: df_scrape["2025"],
-                    f"{page}.Last3": df_scrape["Last 3"],
-                    f"{page}.Last1": df_scrape["Last 1"],
-                    f"{page}.Home": df_scrape["Home"]
+                    page: df_scrape.get("2025"),
+                    f"{page}.Last3": df_scrape.get("Last 3"),
+                    f"{page}.Last1": df_scrape.get("Last 1"),
+                    f"{page}.Home": df_scrape.get("Home")
                 })
-
                 df_stat_away = pd.DataFrame({
                     "Date": date,
                     "Team": df_scrape["Team"],
-                    page: df_scrape["2025"],
-                    f"{page}.Last3": df_scrape["Last 3"],
-                    f"{page}.Last1": df_scrape["Last 1"],
-                    f"{page}.Away": df_scrape["Away"]
+                    page: df_scrape.get("2025"),
+                    f"{page}.Last3": df_scrape.get("Last 3"),
+                    f"{page}.Last1": df_scrape.get("Last 1"),
+                    f"{page}.Away": df_scrape.get("Away")
                 })
-
-                if df_day_home is None:
-                    df_day_home = df_stat_home
-                    df_day_away = df_stat_away
-                else:
-                    df_day_home = pd.merge(df_day_home, df_stat_home, on=["Date", "Team"], how="left")
-                    df_day_away = pd.merge(df_day_away, df_stat_away, on=["Date", "Team"], how="left")
+                df_day_home = df_stat_home if df_day_home is None else pd.merge(df_day_home, df_stat_home, on=["Date", "Team"], how="left")
+                df_day_away = df_stat_away if df_day_away is None else pd.merge(df_day_away, df_stat_away, on=["Date", "Team"], how="left")
 
         except Exception as e:
             print(f"Failed to scrape {url}: {e}")
 
-
     df_stats_home[date] = df_day_home
     df_stats_away[date] = df_day_away
 
-    # Save df_stats_home and df_stats_away to RDS-like files
     with open("Stats_Home.rds", "wb") as f:
         pickle.dump(df_stats_home, f)
-
     with open("Stats_Away.rds", "wb") as f:
         pickle.dump(df_stats_away, f)
 
-# Print statement to display all known scraped dates
 print("All scraped dates for home_stats:", sorted(df_stats_home.keys()))
 print("All scraped dates for away_stats:", sorted(df_stats_away.keys()))
 
