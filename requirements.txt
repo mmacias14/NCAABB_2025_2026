@@ -1,0 +1,8 @@
+pandas
+numpy
+datetime 
+bs4 
+requests
+scikit-learn
+dash
+tensorflow
