@@ -57,10 +57,14 @@ if __name__ == "__main__":
 
     # Step 4: Copy NCAA_Basketball_Spread_Predictions_2025_2026.rds file to ncaabb_2025_2026 folder using shutil
     shutil.copy("NCAA_Basketball_Spread_Predictions_2025_2026.rds", "ncaabb_2025_2026/NCAA_Basketball_Spread_Predictions_2025_2026.rds")
+    log_message(f"\n Copied NCAA_Basketball_Spread_Predictions_2025_2026.rds to ncaabb_2025_2026 folder.")
+    step_results["File Copy"] = f"{GREEN}Success{RESET}"
 
     # Step 5: Run app
-    subprocess.run(["python", "ncaabb_2025_2026/deploy_shiny.py"])
-
+    subprocess.run(["python3", "ncaabb_2025_2026/deploy_shiny.py"])
+    log_message(f"\n Launched Shiny app deployment script.")
+    step_results["Deploy Shiny App"] = f"{GREEN}Success{RESET}"
+    
     # Final summary
     log_message("\n Workflow Summary:")
     for step, outcome in step_results.items():
