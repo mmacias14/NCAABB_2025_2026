@@ -6,3 +6,6 @@ requests
 scikit-learn
 dash
 tensorflow
+nbconvert
+openpyxl
+matplotlib

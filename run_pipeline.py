@@ -22,17 +22,17 @@ def log_message(message):
 
 # Function to run a Python script in format 'python script_name' and log output
 def run_python_script(script_name):
-    log_message(f"\n🐍 Running script {script_name}...")
+    log_message(f"\n Running script {script_name}...")
     result = subprocess.run([sys.executable, script_name], capture_output=True, text=True)
     log_message(result.stdout)
     if result.stderr:
-        log_message(f"⚠️ Errors/Warnings in {script_name}:\n{result.stderr}")
+        log_message(f" Errors/Warnings in {script_name}:\n{result.stderr}")
         step_results[script_name] = f"{YELLOW}Warnings/Errors{RESET}"
     else:
         step_results[script_name] = f"{GREEN}Success{RESET}"
 
 def run_notebook(notebook_name):
-    log_message(f"\n📓 Executing notebook {notebook_name}...")
+    log_message(f"\n Executing notebook {notebook_name}...")
     result = subprocess.run([
         sys.executable, "-m", "nbconvert",
         "--to", "notebook", "--execute",
@@ -40,7 +40,7 @@ def run_notebook(notebook_name):
     ], capture_output=True, text=True)
     log_message(result.stdout)
     if result.stderr:
-        log_message(f"⚠️ Errors/Warnings in {notebook_name}:\n{result.stderr}")
+        log_message(f" Errors/Warnings in {notebook_name}:\n{result.stderr}")
         step_results[notebook_name] = f"{YELLOW}Warnings/Errors{RESET}"
     else:
         step_results[notebook_name] = f"{GREEN}Success{RESET}"
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     subprocess.run(["python", "ncaabb_2025_2026/deploy_shiny.py"])
 
     # Final summary
-    log_message("\n📊 Workflow Summary:")
+    log_message("\n Workflow Summary:")
     for step, outcome in step_results.items():
         log_message(f" - {step}: {outcome}")
 
-    log_message("\n✅ Workflow completed (errors were logged if any occurred).")
-    print(f"\n📂 Logs saved to {log_file}")
+    log_message("\n Workflow completed (errors were logged if any occurred).")
+    print(f" Logs saved to {log_file}")
