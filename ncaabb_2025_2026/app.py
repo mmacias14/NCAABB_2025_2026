@@ -1,3 +1,4 @@
+import pytz
 from shiny import App, ui, render
 import pandas as pd
 import plotly.express as px
@@ -76,9 +77,11 @@ df_master = df_master[~(
     ((df_master["Predicted.Winner"] == df_master["Away"]) & (df_master["Predicted.Score.Diff"] > 0))
 )]
 
+# Set today's date as it currently stands in central time zone
+today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
+
 # Filter for upcoming games
-today = date.today().strftime('%Y-%m-%d')
-df_date = df_master[df_master["Date.Game"] >= today]
+df_date = df_master[df_master["Date.Game"] >= today_central]
 
 # --- UI ---
 app_ui = ui.page_fluid(
@@ -143,8 +146,8 @@ def server(input, output, session):
     @output
     @render_widget
     def daily_plot():
-        today = date.today().strftime('%Y-%m-%d')
-        df_plot = df_master[df_master["Date.Game"] >= today].copy()
+        today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
+        df_plot = df_master[df_master["Date.Game"] >= today_central].copy()
 
         # Exclude records from df_plot where the predicted winner is not consistent with the predicted score difference
         # For example, if the predicted winner is the home team but the predicted score difference is negative (indicating the away team is favored), remove that record
