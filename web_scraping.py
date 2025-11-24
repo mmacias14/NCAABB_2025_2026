@@ -22,6 +22,28 @@ try:
 except:
     df_stats_away, df_stats_home = {}, {}
 
+# After loading df_stats_home and df_stats_away
+try:
+    df_stats_away = load_rds("Stats_Away.rds")
+    df_stats_home = load_rds("Stats_Home.rds")
+except:
+    df_stats_away, df_stats_home = {}, {}
+
+# Identify keys with None values
+home_none_keys = [k for k, v in df_stats_home.items() if v is None]
+away_none_keys = [k for k, v in df_stats_away.items() if v is None]
+
+print("\n--- Diagnostics ---")
+print(f"Stats_Home.rds has {len(home_none_keys)} None entries")
+if home_none_keys:
+    print("Home None dates:", sorted(home_none_keys))
+
+print(f"Stats_Away.rds has {len(away_none_keys)} None entries")
+if away_none_keys:
+    print("Away None dates:", sorted(away_none_keys))
+print("-------------------\n")
+
+# Create list of all dates
 dates_stat = pd.date_range(date_start, date_end).strftime("%Y-%m-%d").tolist()
 
 # Identify missing dates in stats data
@@ -31,7 +53,10 @@ missing_date = list(set([
     d for d in dates_stat if d not in df_stats_home.keys()
 ]))
 
-missing_date = sorted(missing_date)
+missing_date = sorted(set(missing_date + home_none_keys + away_none_keys))
+print(f"Total missing dates to scrape: {len(missing_date)}")
+print("Missing dates:", missing_date)
+
 
 # Function to scrape table from teamrankings.com
 def scrape_table(url):
@@ -154,6 +179,10 @@ for date in missing_date:
     with open("Stats_Away.rds", "wb") as f:
         pickle.dump(df_stats_away, f)
 
+# Print statement to display all known scraped dates
+print("All scraped dates for home_stats:", sorted(df_stats_home.keys()))
+print("All scraped dates for away_stats:", sorted(df_stats_away.keys()))
+
 #Function to scrape scores from sports-reference.com
 def scrape_scores_for_date(date):
     year = date.year
@@ -274,6 +303,9 @@ df_scores.drop_duplicates(
     subset=["date_game", "team_name_home", "team_name_away"],
     keep="first", inplace=True
 )
+
+# Print statement for all scraped dates
+print("All scraped dates for scores:", sorted(pd.to_datetime(df_scores['date_game']).dt.strftime("%Y-%m-%d").unique()))
 
 # Save the result
 with open("Scores.rds", "wb") as f:
