@@ -85,6 +85,7 @@ today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
 
 # Filter for upcoming games
 df_date = df_master[df_master["Date.Game"] >= today_central]
+df_plot = df_master[df_master["Date.Game"] >= today_central].copy()
 
 # --- UI ---
 app_ui = ui.page_fluid(
@@ -109,6 +110,14 @@ app_ui = ui.page_fluid(
         ),
         ui.card(
             ui.h2("Upcoming Game Predictions"),
+            #ui.h4("Filter by Date.Game"),
+            ui.input_selectize(
+                "date_select",
+                "Choose Date(s):",
+                choices=list(df_plot["Date.Game"].unique()),
+                selected=[df_plot["Date.Game"].unique()[0]],
+                multiple=True
+            ),
             output_widget("daily_plot"),
             ui.output_data_frame("date_table"),
             ui.p("Note: Games where the Predicted.Score.Diff is negative means the Away team is the predicted winner."),
@@ -172,9 +181,12 @@ def server(input, output, session):
             lambda row: -row["Predicted.Score.Diff"] if row["Predicted.Score.Diff"] < 0
             else row["Predicted.Score.Diff"], axis=1)
         
+        selected_dates = input.date_select()
+        df_filtered = df_plot[df_plot["Date.Game"].isin(selected_dates)]
+
         # Build daily plot
         fig_date = px.scatter(
-            df_plot,
+            df_filtered,
             x="Predicted.Score.Diff",
             y="Win.Probability",
             color="Predicted.Winner.Ranking.Position",
