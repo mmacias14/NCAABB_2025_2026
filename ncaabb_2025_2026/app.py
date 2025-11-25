@@ -111,6 +111,7 @@ app_ui = ui.page_fluid(
             ui.h2("Upcoming Game Predictions"),
             output_widget("daily_plot"),
             ui.output_data_frame("date_table"),
+            ui.p("Note: Games where the Predicted.Score.Diff is negative means the Away team is the predicted winner."),
             ui.h2("Past Game Results"),
             output_widget("all_plot"),
             ui.output_data_frame("past_table")
