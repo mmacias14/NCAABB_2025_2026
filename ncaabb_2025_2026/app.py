@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import pickle
 import datetime
-from datetime import date
+from datetime import datetime, date, timedelta
 import numpy as np
 from sklearn.metrics import (
     mean_squared_error,
@@ -121,7 +121,7 @@ def server(input, output, session):
     @output
     @render.text
     def model_date():
-        return f"- Trained from games through: {(date.today() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')}"
+        return f"- Trained from games through: {(date.today() - timedelta(days=1)).strftime('%Y-%m-%d')}"
 
     @output
     @render.text
@@ -315,7 +315,7 @@ def server(input, output, session):
     @output
     @render.data_frame
     def past_table():
-        target_dates = [(date.today() - datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in [1,2,3]]
+        target_dates = [(date.today() - timedelta(days=i)).strftime('%Y-%m-%d') for i in [1,2,3]]
         recent = df_master[df_master["Date.Game"].isin(target_dates)]
         return render.DataGrid(recent[["Date.Game","Home","Away","Predicted.Winner","Actual.Winner","Predicted.Score.Diff","Actual.Score.Diff"]],
                                 styles={"searching": True, "ordering": True, "pageLength": 10, "filters": True}
