@@ -95,6 +95,8 @@ app_ui = ui.page_fluid(
             ui.p("- Point Differential Model: Neural Network with Home Team Point Differential Response"),
             ui.p("- Game Winner Model: Neural Network with Underdog Win Classifier"),
             ui.p("- Underdogs are defined as teams with lower pre-game power rankings"),
+            ui.p("- Only games where at least one team is ranked in the top 200 are evaluated"),
+            ui.p("- Games where the two models disagree on the predicted winner have been excluded from the predictions"),
             ui.h3("Model Performance Metrics:"),
             ui.output_text("model_spread"),
             ui.output_text("model_winloss_acc"),
@@ -121,17 +123,17 @@ def server(input, output, session):
     @output
     @render.text
     def model_date():
-        return f"- Trained from games through: {(datetime.now(pytz.timezone('US/Central')) - timedelta(days=1)).strftime('%Y-%m-%d')}"
+        return f"- Trained using games played through: {(datetime.now(pytz.timezone('US/Central')) - timedelta(days=1)).strftime('%Y-%m-%d')}"
 
     @output
     @render.text
     def model_spread():
-        return f"- Point Differential Model Std Deviation: ± {round(df_metrics['rmse.spread'].item(), 1)} pts"
+        return f"- Point Differential Model Standard Deviation: ± {round(df_metrics['rmse.spread'].item(), 1)} pts"
 
     @output
     @render.text
     def model_winloss_acc():
-        return f"- Game Winner Model Accuracy: {round(100 * df_metrics['accuracy.moneyline'].item(), 1)}%"
+        return f"- Game Winner Overall Prediction Accuracy: {round(100 * df_metrics['accuracy.moneyline'].item(), 1)}%"
 
     @output
     @render.text
