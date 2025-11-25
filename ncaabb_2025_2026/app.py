@@ -41,6 +41,9 @@ df_master["Win.Probability"] = df_master.apply(
 #Round Probability
 df_master['Win.Probability'] = round(df_master['Win.Probability'],3)
 
+#If Probability  is 1, set to 0.999
+df_master['Win.Probability'] = df_master['Win.Probability'].apply(lambda x: 0.999 if x == 1 else x)
+
 # Round Score.Diff
 df_master['Predicted.Score.Diff'] = (df_master['Predicted.Score.Diff'] * 2).round() / 2
 
@@ -122,8 +125,10 @@ def server(input, output, session):
 
     @output
     @render.text
-    def model_date():
-        return f"- Trained using games played through: {(datetime.now(pytz.timezone('US/Central')) - timedelta(days=1)).strftime('%Y-%m-%d')}"
+    def model_date(df_played=df_played):
+        # Find the last Date.Game in df_played
+        last_date_played = df_played['Date.Game'].max()
+        return f"- Trained using games played through: {last_date_played}"
 
     @output
     @render.text
