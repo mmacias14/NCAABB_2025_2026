@@ -10,7 +10,8 @@ from sklearn.metrics import (
     mean_squared_error,
     accuracy_score,
     precision_score,
-    recall_score
+    recall_score,
+    f1_score
 )
 from shinywidgets import output_widget, render_widget  
 
@@ -59,13 +60,15 @@ mae = (df_played['Score.Diff'] - df_played['Predicted.Score.Diff']).abs().mean()
 accuracy = accuracy_score(df_played['Underdog.Win'], df_played['Predicted.Underdog.Win.Prob'] > 0.5)
 recall = recall_score(df_played['Underdog.Win'], df_played['Predicted.Underdog.Win.Prob'] > 0.5)
 precision = precision_score(df_played['Underdog.Win'], df_played['Predicted.Underdog.Win.Prob'] > 0.5)
+f1 = f1_score(df_played['Underdog.Win'], df_played['Predicted.Underdog.Win.Prob'] > 0.5)
 
 df_metrics = {
     "rmse.spread": rmse,
     "mae.spread": mae,
     "accuracy.moneyline": accuracy,
     "recall.moneyline": recall,
-    "precision.moneyline": precision
+    "precision.moneyline": precision,
+    "f1.moneyline": f1
 }
 
 df_metrics = pd.DataFrame([df_metrics])
@@ -106,6 +109,7 @@ app_ui = ui.page_fluid(
             ui.output_text("model_winloss_acc"),
             ui.output_text("model_winloss_prec"),
             ui.output_text("model_winloss_recall"),
+            ui.output_text("model_winloss_f1"),
             style="font-size: 12px;"   # 👈 smaller font for this card only
         ),
         ui.card(
@@ -159,6 +163,11 @@ def server(input, output, session):
     @render.text
     def model_winloss_recall():
         return f"- Game Winner Model Actual Underdog Win Detection Rate (Recall): {round(100 * df_metrics['recall.moneyline'].item(), 1)}%"
+
+    @output
+    @render.text
+    def model_winloss_f1():
+        return f"- Game Winner Model F1 Score: {round(100 * df_metrics['f1.moneyline'].item(), 1)}%"
 
     @output
     @render_widget
