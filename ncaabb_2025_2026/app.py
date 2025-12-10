@@ -119,7 +119,7 @@ app_ui = ui.page_fluid(
                 "date_select",
                 "Choose Date(s):",
                 choices=list(df_plot["Date.Game"].unique()),
-                selected=[df_plot["Date.Game"].unique()[0]],
+                selected=[df_plot["Date.Game"].unique()],
                 multiple=True
             ),
             output_widget("daily_plot"),
