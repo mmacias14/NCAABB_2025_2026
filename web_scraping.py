@@ -172,6 +172,17 @@ for date in dates_to_rescrape:
 print("All scraped dates for home_stats:", sorted(df_stats_home.keys()))
 print("All scraped dates for away_stats:", sorted(df_stats_away.keys()))
 
+# Add header to requests
+headers = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://www.basketball-reference.com/"
+}
+
+
 #Function to scrape scores from sports-reference.com
 def scrape_scores_for_date(date):
     year = date.year
@@ -180,7 +191,13 @@ def scrape_scores_for_date(date):
     url = f"https://www.sports-reference.com/cbb/boxscores/index.cgi?month={month}&day={day}&year={year}"
     
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
+
+        # Debugging output
+        print(response.status_code)
+        print(response.text[:500])
+
+
         soup = BeautifulSoup(response.content, "html.parser")
         teams = soup.select(".teams")
 
