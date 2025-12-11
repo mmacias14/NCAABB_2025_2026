@@ -103,6 +103,7 @@ app_ui = ui.page_fluid(
             ui.p("- Game Winner Model: Neural Network with Underdog Win Classifier"),
             ui.p("- Underdogs are defined as teams with lower pre-game power rankings"),
             ui.p("- Only games where at least one team is ranked in the top 200 are evaluated"),
+            ui.p("- The models are trained to minimize point differential error and maximize the underdog win F1 score (harmonic mean of precision and recall) on hold out data points"),
             ui.p("- Games where the two models disagree on the predicted winner have been excluded from the predictions"),
             ui.h3("Model Performance Metrics:"),
             ui.output_text("model_spread"),
