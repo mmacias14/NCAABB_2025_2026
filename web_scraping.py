@@ -195,8 +195,6 @@ def scrape_scores_for_date(date):
 
         # Debugging output
         print(response.status_code)
-        print(response.text[:500])
-
 
         soup = BeautifulSoup(response.content, "html.parser")
         teams = soup.select(".teams")
