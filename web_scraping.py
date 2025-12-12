@@ -268,13 +268,20 @@ except:
 existing_dates = pd.to_datetime(df_scores['date_game']).dt.date.unique() if not df_scores.empty else []
 missing_dates = [d for d in target_dates if d not in existing_dates]
 
-# Add tomorrow to missing dates if not present
+# Add tomorrow to target dates if not present
 tomorrow = datetime.now().date() + timedelta(days=1)
 if tomorrow not in target_dates:
     target_dates.append(tomorrow)
 
-# Combine with target range
-scrape_dates = sorted(target_dates)
+# Limit scrape dates to the last four days of target dates
+scrape_dates = sorted(target_dates)[-4:]
+
+# Add any missing dates to scrape_dates
+for d in missing_dates:
+    if d not in scrape_dates:
+        scrape_dates.append(d)
+
+scrape_dates = sorted(scrape_dates)
 
 # If you need strings for scraping URLs, convert later:
 scrape_dates_str = [d.strftime("%Y-%m-%d") for d in scrape_dates]
