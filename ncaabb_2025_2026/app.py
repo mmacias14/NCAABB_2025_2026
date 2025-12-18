@@ -39,6 +39,21 @@ df_master["Win.Probability"] = df_master.apply(
     lambda row: row["Predicted.Underdog.Win.Prob"] if row["Predicted.Winner"] == row["Underdog"]
     else 1 - row["Predicted.Underdog.Win.Prob"], axis=1)
 
+# Apply a power transformation to Win.Probability to accentuate differences
+p = 2.5   # try 1.5, 2, 3 depending on how strong you want the effect
+
+# Original probabilities
+x = df_master['Win.Probability']
+
+# Step 1: map [0.5, 1] → [0, 1]
+z = 2 * (x - 0.5)
+
+# Step 2: apply power transform
+z_prime = z ** p
+
+# Step 3: map back to [0.5, 1]
+df_master['Win.Probability'] = 0.5 + 0.5 * z_prime
+
 #Round Probability
 df_master['Win.Probability'] = round(df_master['Win.Probability'],3)
 
