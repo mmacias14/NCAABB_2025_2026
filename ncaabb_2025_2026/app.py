@@ -321,7 +321,7 @@ def server(input, output, session):
         # Add circular bands for each probability range
         for i, color in enumerate(colors):
             fig_all.add_shape(
-                type="circle",
+                type="rect",
                 xref="x", yref="y",
                 x0=-(i+1) * rmse.item(),
                 y0=-prob_thresholds[i] + 0.5,       # lower bound of probability band
