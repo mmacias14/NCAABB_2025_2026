@@ -223,16 +223,16 @@ def server(input, output, session):
 
         fig_date.add_annotation(
             text="MOST PROBABLE",
-            x=rmse.item() + 15,
-            y=0.925,
+            x=3*rmse.item() + 7,
+            y=0.95,
             showarrow=False,
             font=dict(color="red")
         )
 
         fig_date.add_annotation(
             text="WINNERS",
-            x=rmse.item() + 15,
-            y=0.9,
+            x=3*rmse.item() + 7,
+            y=0.925,
             showarrow=False,
             font=dict(color="red")
         )
@@ -247,7 +247,7 @@ def server(input, output, session):
         # Add circular bands for each probability range
         for i, color in enumerate(colors):
             fig_date.add_shape(
-                type="circle",
+                type="rect",
                 xref="x", yref="y",
                 x0=-(i+1) * rmse.item(),
                 y0= 0.5 - (prob_thresholds[i] - 0.5),       # lower bound of probability band
