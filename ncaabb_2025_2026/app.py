@@ -334,7 +334,7 @@ def server(input, output, session):
             )
 
         fig_all.update_layout(
-            title="Game Winner Prediction Accuracy with Circular Error Bands", 
+            title="Game Winner Prediction Accuracy with Progressive Confidence Regions", 
             xaxis_title="Predicted Point Differential", 
             yaxis_title="Predicted Win Probability",
             xaxis_range=[0, 40],
