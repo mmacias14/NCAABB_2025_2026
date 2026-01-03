@@ -93,7 +93,7 @@ df_master = df_master.rename(columns={"Score.Diff": "Actual.Score.Diff"})
 
 # Exclude records from df_plot where the predicted winner is not consistent with the predicted score difference
 # For example, if the predicted winner is the home team but the predicted score difference is negative (indicating the away team is favored), remove that record
-df_master = df_master[~(
+df_master_wo_exclusions = df_master[~(
     ((df_master["Predicted.Winner"] == df_master["Home"]) & (df_master["Predicted.Score.Diff"] < 0)) |
     ((df_master["Predicted.Winner"] == df_master["Away"]) & (df_master["Predicted.Score.Diff"] > 0))
 )]
@@ -102,8 +102,8 @@ df_master = df_master[~(
 today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
 
 # Filter for upcoming games
-df_date = df_master[df_master["Date.Game"] >= today_central]
-df_plot = df_master[df_master["Date.Game"] >= today_central].copy()
+df_date = df_master_wo_exclusions[df_master_wo_exclusions["Date.Game"] >= today_central]
+df_plot = df_master_wo_exclusions[df_master_wo_exclusions["Date.Game"] >= today_central].copy()
 
 # --- UI ---
 app_ui = ui.page_fluid(
@@ -141,6 +141,9 @@ app_ui = ui.page_fluid(
             output_widget("daily_plot"),
             ui.output_data_frame("date_table"),
             ui.p("Note: Games where the Predicted.Score.Diff is negative means the Away team is the predicted winner."),
+            ui.h2("Strong Underdogs"),
+            ui.p("Games where the Underdog has a predicted win probability > 0.5"),
+            ui.output_data_frame("underdog_table"),
             ui.h2("Past Game Results"),
             output_widget("all_plot"),
             ui.output_data_frame("past_table")
@@ -354,6 +357,15 @@ def server(input, output, session):
     @render.data_frame
     def date_table():
         return render.DataGrid(df_date[["Date.Game","Home","Away","Predicted.Winner","Predicted.Winner.Ranking.Position","Predicted.Score.Diff","Win.Probability"]],
+                                styles={"searching": True, "ordering": True, "pageLength": 10, "filters": True}
+                                )
+
+    @output
+    @render.data_frame
+    def underdog_table():
+        today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
+        df_underdogs = df_master[(df_master["Predicted.Winner.Ranking.Position"] == "Underdog") & (df_master["Win.Probability"] > 0.5) & (df_master["Date.Game"] >= today_central)]
+        return render.DataGrid(df_underdogs[["Date.Game","Home","Away","Predicted.Winner","Predicted.Winner.Ranking.Position","Predicted.Score.Diff","Win.Probability"]],
                                 styles={"searching": True, "ordering": True, "pageLength": 10, "filters": True}
                                 )
 
