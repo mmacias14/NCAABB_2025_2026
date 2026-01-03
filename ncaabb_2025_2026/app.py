@@ -144,6 +144,7 @@ app_ui = ui.page_fluid(
             ui.h2("Strong Underdogs"),
             ui.p("Games where the Underdog has a predicted win probability > 0.5"),
             ui.output_data_frame("underdog_table"),
+            ui.p("Note: This list may include games where the two models disagree on the predicted winner."),
             ui.h2("Past Game Results"),
             output_widget("all_plot"),
             ui.output_data_frame("past_table")
@@ -365,7 +366,7 @@ def server(input, output, session):
     def underdog_table():
         today_central = datetime.now(pytz.timezone('US/Central')).strftime('%Y-%m-%d')
         df_underdogs = df_master[(df_master["Predicted.Winner.Ranking.Position"] == "Underdog") & (df_master["Win.Probability"] > 0.5) & (df_master["Date.Game"] >= today_central)]
-        return render.DataGrid(df_underdogs[["Date.Game","Home","Away","Predicted.Winner","Predicted.Winner.Ranking.Position","Predicted.Score.Diff","Win.Probability"]],
+        return render.DataGrid(df_underdogs[["Date.Game","Home","Away","Predicted.Winner","Predicted.Winner.Ranking.Position","Win.Probability"]],
                                 styles={"searching": True, "ordering": True, "pageLength": 10, "filters": True}
                                 )
 
