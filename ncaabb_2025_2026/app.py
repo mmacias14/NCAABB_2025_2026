@@ -305,7 +305,11 @@ def server(input, output, session):
             df_past, 
             x="Predicted.Score.Diff", 
             y="Win.Probability", 
-            color="Model.Pick", 
+            color="Model.Pick",
+            color_discrete_map={
+                "Correct": "blue",
+                "Incorrect": "red"
+            },
             opacity=0.5, 
             hover_data=["Date.Game",
                         "Predicted.Winner",
