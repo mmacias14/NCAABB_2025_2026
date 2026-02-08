@@ -219,6 +219,10 @@ def server(input, output, session):
             x="Predicted.Score.Diff",
             y="Win.Probability",
             color="Predicted.Winner.Ranking.Position",
+            color_discrete_map={
+                "Favorite": "blue",
+                "Underdog": "red"
+            },
             opacity=0.7,
             hover_data=["Date.Game","Predicted.Winner","Opponent","Predicted.Score.Diff","Win.Probability"]
         )
